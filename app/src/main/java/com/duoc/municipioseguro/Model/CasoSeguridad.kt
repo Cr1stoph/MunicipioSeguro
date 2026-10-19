@@ -2,7 +2,7 @@ package com.duoc.municipioseguro.Model
 
 data class CasoSeguridad(
     val id: String,
-    val categoria: String,
+    val categoria: CategoriaCaso,
     val fechaHora: Long,
     val ubicacion: String,
     val descripcion: String,
