@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.duoc.municipioseguro.Model.CasoSeguridad
 import com.duoc.municipioseguro.Model.SesionUsuario
+import com.duoc.municipioseguro.Model.UsuarioRol
 import com.duoc.municipioseguro.repository.AuthRepository
 import com.duoc.municipioseguro.repository.CasoSeguridadRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,5 +27,15 @@ class CasoSeguridadViewModel : ViewModel() {
 
     private fun actualizarListaCasos(){
         _listaCasos.value = casoRepository.obtenerTodosLosCasos()
+    }
+
+    fun iniciarSesionSimulada(rol: UsuarioRol){
+        val sesion = authRepository.iniciarSesion(rol)
+        _sesionActual.value = sesion
+    }
+
+    fun cerrarSesion(){
+        authRepository.cerrarSesion()
+        _sesionActual.value = null
     }
 }
