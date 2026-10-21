@@ -1,17 +1,23 @@
 package com.duoc.municipioseguro
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
+import com.duoc.municipioseguro.viewModel.CasoSeguridadViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +25,65 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MunicipioSeguroTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                AppNavegacion()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun AppNavegacion(
+    viewModel: CasoSeguridadViewModel = viewModel()
+) {
+    val sesionActual by viewModel.sesionActual.collectAsState()
+    val context = LocalContext.current
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MunicipioSeguroTheme {
-        Greeting("Android")
+    if (sesionActual == null) {
+        LoginScreen(
+            onLoginSuccess = { rol ->
+                viewModel.iniciarSesionSimulada(rol)
+                Toast.makeText(
+                    context,
+                    "Sesión iniciada como: ${rol.javaClass.simpleName}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            },
+            onCreateAccountClick = {
+                Toast.makeText(context, "Navegar a Crear Cuenta", Toast.LENGTH_SHORT).show()
+            },
+            onForgotPasswordClick = {
+                Toast.makeText(context, "Navegar a Recuperar Contraseña", Toast.LENGTH_SHORT).show()
+            }
+        )
+    } else {
+        // Pantalla Temporal Post-Login (Siguiente paso: ListaCasosScreen)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "¡Bienvenido/a!",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Has ingresado con el perfil: ${sesionActual?.rol?.javaClass?.simpleName}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { viewModel.cerrarSesion() }
+                ) {
+                    Text("Cerrar Sesión")
+                }
+            }
+        }
     }
 }
