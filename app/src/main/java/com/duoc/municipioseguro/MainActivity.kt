@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.duoc.municipioseguro.ui.screens.HomeScreen
 import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.screens.OlvidoContrasenaScreen
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
@@ -79,34 +80,11 @@ fun AppNavegacion(
             }
         }
     } else {
-        // Pantalla Temporal Post-Login (Siguiente paso: ListaCasosScreen)
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "¡Bienvenido/a!",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Has ingresado con el perfil: ${sesionActual?.rol?.javaClass?.simpleName}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = { viewModel.cerrarSesion() }
-                ) {
-                    Text("Cerrar Sesión")
-                }
+        // Mostrar HomeScreen en vez de la pantalla temporal
+        HomeScreen(
+            onLogoutClick = {
+                viewModel.cerrarSesion()
             }
-        }
+        )
     }
 }
