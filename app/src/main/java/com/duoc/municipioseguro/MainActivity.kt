@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.municipioseguro.ui.screens.HomeScreen
 import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.screens.OlvidoContrasenaScreen
+import com.duoc.municipioseguro.ui.screens.ReportesScreen
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
 import com.duoc.municipioseguro.viewModel.CasoSeguridadViewModel
 
@@ -80,11 +81,31 @@ fun AppNavegacion(
             }
         }
     } else {
-        // Mostrar HomeScreen en vez de la pantalla temporal
-        HomeScreen(
-            onLogoutClick = {
-                viewModel.cerrarSesion()
-            }
-        )
+        val listaCasos by viewModel.listaCasos.collectAsState()
+        var currentMainScreen by remember { mutableStateOf("home") }
+
+        when (currentMainScreen) {
+            "home" -> HomeScreen(
+                onNavigateHome = { currentMainScreen = "home" },
+                onNavigateReportes = { currentMainScreen = "reports" },
+                onNavigateAvisos = {
+                    Toast.makeText(context, "Sección Avisos (Próximamente)", Toast.LENGTH_SHORT).show()
+                },
+                onLogoutClick = {
+                    viewModel.cerrarSesion()
+                }
+            )
+            "reports" -> ReportesScreen(
+                casos = listaCasos,
+                onNavigateHome = { currentMainScreen = "home" },
+                onNavigateReportes = { currentMainScreen = "reports" },
+                onNavigateAvisos = {
+                    Toast.makeText(context, "Sección Avisos (Próximamente)", Toast.LENGTH_SHORT).show()
+                },
+                onLogoutClick = {
+                    viewModel.cerrarSesion()
+                }
+            )
+        }
     }
 }

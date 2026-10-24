@@ -34,15 +34,18 @@ import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onNavigateHome: () -> Unit = {},
+    onNavigateReportes: () -> Unit = {},
+    onNavigateAvisos: () -> Unit = {},
     onLogoutClick: () -> Unit
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
-    val items = listOf("Inicio", "Mis reportes", "Avisos y Reportes")
+    val items = listOf("Inicio", "Mis reportes", "Avisos")
     val selectedIcons = listOf(Icons.Filled.Home, Icons.Filled.List, Icons.Filled.Notifications)
     val unselectedIcons = listOf(Icons.Outlined.Home, Icons.Filled.List, Icons.Filled.Notifications)
 
     Scaffold(
-        containerColor = Color(0xFFF7F9FC), // Fondo claro como en la imagen de figma
+        containerColor = Color(0xFFF7F9FC), // Fondo claro como en la imagen
         bottomBar = {
             NavigationBar(
                 containerColor = Color.White
@@ -57,7 +60,14 @@ fun HomeScreen(
                         },
                         label = { Text(item) },
                         selected = selectedItem == index,
-                        onClick = { selectedItem = index }
+                        onClick = {
+                            selectedItem = index
+                            when (index) {
+                                0 -> onNavigateHome()
+                                1 -> onNavigateReportes()
+                                2 -> onNavigateAvisos()
+                            }
+                        }
                     )
                 }
             }
