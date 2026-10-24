@@ -42,7 +42,7 @@ fun HomeScreen(
     val unselectedIcons = listOf(Icons.Outlined.Home, Icons.Filled.List, Icons.Filled.Notifications)
 
     Scaffold(
-        containerColor = Color(0xFFF7F9FC), // Fondo claro como en la imagen
+        containerColor = Color(0xFFF7F9FC), // Fondo claro como en la imagen de figma
         bottomBar = {
             NavigationBar(
                 containerColor = Color.White
