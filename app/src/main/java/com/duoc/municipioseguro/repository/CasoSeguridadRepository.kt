@@ -11,13 +11,28 @@ class CasoSeguridadRepository {
     }
 
     private fun cargarDatosFicticios() {
+        // Fechas fijas aproximadas en milisegundos para coincidir con el diseño (15 oct 2026, 13 oct 2026, 8 oct 2026)
+        // 1792022400000L es aprox octubre de 2026
         casosBD.add(
             CasoSeguridad(
-                id = "CASO-001",
+                id = "SJ-2026-0148",
                 categoria = CategoriaCaso.AlumbradoPublico,
-                fechaHora = System.currentTimeMillis() - 86400000, // Hace 1 día
-                ubicacion = "Avenida Las Industrias 1200", // Sector referencial
-                descripcion = "Poste chocado, cables expuestos y sin luz.",
+                fechaHora = 1792022400000L - (1L * 86400000L), // 15 oct 2026 aprox
+                ubicacion = "Av. Departamental con Las Industrias",
+                descripcion = "Reporte ingresado para revisión.",
+                prioridad = Prioridad.Media,
+                estado = Estado.Registrado,
+                rolAsignado = null
+            )
+        )
+
+        casosBD.add(
+            CasoSeguridad(
+                id = "SJ-2026-0142",
+                categoria = CategoriaCaso.EspacioPublico,
+                fechaHora = 1792022400000L - (3L * 86400000L), // 13 oct 2026 aprox
+                ubicacion = "Las Industrias con Pintor Cicarelli",
+                descripcion = "Derivado al área de espacio público.",
                 prioridad = Prioridad.Alta,
                 estado = Estado.EnRevision,
                 rolAsignado = UsuarioRol.Operador
@@ -26,14 +41,14 @@ class CasoSeguridadRepository {
 
         casosBD.add(
             CasoSeguridad(
-                id = "CASO-002",
-                categoria = CategoriaCaso.ConvivenciaVecinal,
-                fechaHora = System.currentTimeMillis() - 3600000, // Hace 1 hora
-                ubicacion = "Plaza Central", // Sector referencial
-                descripcion = "Grupo de personas haciendo ruido excesivo.",
+                id = "SJ-2026-0126",
+                categoria = CategoriaCaso.AlumbradoPublico,
+                fechaHora = 1792022400000L - (8L * 86400000L), // 8 oct 2026 aprox
+                ubicacion = "Av. Departamental con Santa Rosa",
+                descripcion = "Reparación informada por el área a cargo.",
                 prioridad = Prioridad.Baja,
-                estado = Estado.Registrado,
-                rolAsignado = null
+                estado = Estado.EnSeguimiento, // O interpretado como Resuelto
+                rolAsignado = UsuarioRol.Supervisor
             )
         )
     }
