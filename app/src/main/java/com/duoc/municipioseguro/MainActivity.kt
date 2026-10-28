@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.municipioseguro.Model.UsuarioRol
 import com.duoc.municipioseguro.ui.screens.AdministracionScreen
+import com.duoc.municipioseguro.ui.screens.CrearCuentaScreen
 import com.duoc.municipioseguro.ui.screens.HomeScreen
 import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.screens.OlvidoContrasenaScreen
@@ -60,7 +61,7 @@ fun AppNavegacion(
                         ).show()
                     },
                     onCreateAccountClick = {
-                        Toast.makeText(context, "Navegar a Crear Cuenta", Toast.LENGTH_SHORT).show()
+                        authScreen = "create_account"
                     },
                     onForgotPasswordClick = {
                         authScreen = "forgot_password"
@@ -78,6 +79,21 @@ fun AppNavegacion(
                             "Instrucciones enviadas a $email",
                             Toast.LENGTH_LONG
                         ).show()
+                    }
+                )
+            }
+            "create_account" -> {
+                CrearCuentaScreen(
+                    onBackToLogin = {
+                        authScreen = "login"
+                    },
+                    onAccountCreated = { email ->
+                        Toast.makeText(
+                            context,
+                            "Cuenta creada para $email. Inicia sesión.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        authScreen = "login"
                     }
                 )
             }
