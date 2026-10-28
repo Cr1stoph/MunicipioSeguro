@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +39,7 @@ fun ReportesScreen(
     onNavigateHome: () -> Unit,
     onNavigateReportes: () -> Unit,
     onNavigateAvisos: () -> Unit,
+    onReporteClick: (CasoSeguridad) -> Unit = {},
     onLogoutClick: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Mis reportes, 1: Comunidad
@@ -225,7 +227,7 @@ fun ReportesScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(casos) { caso ->
-                    ReporteCard(caso = caso)
+                    ReporteCard(caso = caso, onClick = { onReporteClick(caso) })
                 }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -236,7 +238,7 @@ fun ReportesScreen(
 }
 
 @Composable
-fun ReporteCard(caso: CasoSeguridad) {
+fun ReporteCard(caso: CasoSeguridad, onClick: () -> Unit = {}) {
     // Definir color y texto del badge según estado
     val (badgeText, badgeBgColor, badgeTextColor) = when (caso.estado) {
         is Estado.Registrado -> Triple("Recibido", Color(0xFFE8F0FE), Color(0xFF23559C))
@@ -257,7 +259,9 @@ fun ReporteCard(caso: CasoSeguridad) {
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)

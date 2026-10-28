@@ -13,7 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.duoc.municipioseguro.Model.UsuarioRol
 import com.duoc.municipioseguro.ui.screens.CrearReporteScreen
+import com.duoc.municipioseguro.ui.screens.DetalleCasoScreen
 import com.duoc.municipioseguro.ui.screens.HomeScreen
 import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.screens.OlvidoContrasenaScreen
@@ -79,6 +81,7 @@ fun AppNavegacion(
     } else {
         val listaCasos by viewModel.listaCasos.collectAsState()
         var currentMainScreen by remember { mutableStateOf("home") }
+        var selectedCasoId by remember { mutableStateOf<String?>(null) }
 
         when (currentMainScreen) {
             "home" -> HomeScreen(
@@ -101,6 +104,10 @@ fun AppNavegacion(
                 onNavigateAvisos = {
                     Toast.makeText(context, "Sección Avisos (Próximamente)", Toast.LENGTH_SHORT).show()
                 },
+                onReporteClick = { caso ->
+                    selectedCasoId = caso.id
+                    currentMainScreen = "report_detail"
+                },
                 onLogoutClick = {
                     viewModel.cerrarSesion()
                 }
@@ -120,6 +127,25 @@ fun AppNavegacion(
                     currentMainScreen = "reports"
                 }
             )
+            "report_detail" -> {
+                val casoSeleccionado = listaCasos.find { it.id == selectedCasoId }
+                if (casoSeleccionado != null) {
+                    DetalleCasoScreen(
+                        caso = casoSeleccionado,
+                        sesionActual = sesionActual,
+                        onBackClick = {
+                            currentMainScreen = "reports"
+                        },
+                        onCambiarEstado = { nuevoEstado ->
+                            viewModel.cambiarEstadoCaso(casoSeleccionado.id, nuevoEstado)
+                        },
+                        onAgregarObservacion = { notaTexto ->
+                            val autorRol = sesionActual?.rol ?: UsuarioRol.Residente
+                            viewModel.registrarObservacion(casoSeleccionado.id, notaTexto, autorRol)
+                        }
+                    )
+                }
+            }
         }
     }
 }

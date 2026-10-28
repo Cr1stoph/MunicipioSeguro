@@ -209,7 +209,7 @@ fun HomeScreen(
                         fontSize = 20.sp,
                         color = Color(0xFF1E293B)
                     )
-                    TextButton(onClick = { /* TODO */ }) {
+                    TextButton(onClick = onNavigateReportes) {
                         Text(
                             text = "Ver todos",
                             color = Color(0xFF23559C),
