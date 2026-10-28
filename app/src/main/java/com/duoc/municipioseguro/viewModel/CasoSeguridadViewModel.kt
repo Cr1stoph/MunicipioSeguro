@@ -1,5 +1,7 @@
 package com.duoc.municipioseguro.viewModel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import com.duoc.municipioseguro.Model.CasoSeguridad
 import com.duoc.municipioseguro.Model.CategoriaCaso
@@ -14,15 +16,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CasoSeguridadViewModel : ViewModel() {
-    private val authRepository = AuthRepository()
+class CasoSeguridadViewModel(application: Application) : AndroidViewModel(application) {
+    private val authRepository = AuthRepository(application)
     private val casoRepository = CasoSeguridadRepository()
     private var contadorObservaciones = 1
 
     private val _listaCasos = MutableStateFlow< List<CasoSeguridad>>(emptyList())
     val listaCasos: StateFlow<List<CasoSeguridad>> = _listaCasos.asStateFlow()
 
-    private val _sesionActual = MutableStateFlow<SesionUsuario?>(null)
+    private val _sesionActual = MutableStateFlow<SesionUsuario?>(authRepository.obtenerSesionActual())
     val sesionActual: StateFlow<SesionUsuario?> = _sesionActual.asStateFlow()
 
     init {
