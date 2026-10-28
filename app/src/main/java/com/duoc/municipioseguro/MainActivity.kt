@@ -5,19 +5,15 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.duoc.municipioseguro.ui.screens.CrearReporteScreen
 import com.duoc.municipioseguro.ui.screens.HomeScreen
 import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.screens.OlvidoContrasenaScreen
@@ -91,6 +87,9 @@ fun AppNavegacion(
                 onNavigateAvisos = {
                     Toast.makeText(context, "Sección Avisos (Próximamente)", Toast.LENGTH_SHORT).show()
                 },
+                onCreateReportClick = {
+                    currentMainScreen = "create_report"
+                },
                 onLogoutClick = {
                     viewModel.cerrarSesion()
                 }
@@ -104,6 +103,21 @@ fun AppNavegacion(
                 },
                 onLogoutClick = {
                     viewModel.cerrarSesion()
+                }
+            )
+            "create_report" -> CrearReporteScreen(
+                onBackClick = {
+                    currentMainScreen = "home"
+                },
+                onSubmitReport = { categoria, ubicacion, descripcion, prioridad ->
+                    val nuevoId = "SJ-2026-${(100..999).random()}"
+                    viewModel.registrarCaso(nuevoId, categoria, ubicacion, descripcion, prioridad)
+                    Toast.makeText(
+                        context,
+                        "Reporte $nuevoId registrado exitosamente",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    currentMainScreen = "reports"
                 }
             )
         }

@@ -37,6 +37,7 @@ fun HomeScreen(
     onNavigateHome: () -> Unit = {},
     onNavigateReportes: () -> Unit = {},
     onNavigateAvisos: () -> Unit = {},
+    onCreateReportClick: () -> Unit = {},
     onLogoutClick: () -> Unit
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
@@ -182,7 +183,7 @@ fun HomeScreen(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { /* TODO */ },
+                            onClick = onCreateReportClick,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF23559C))
