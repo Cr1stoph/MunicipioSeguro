@@ -22,7 +22,9 @@ class CasoSeguridadRepository {
                 descripcion = "Reporte ingresado para revisión.",
                 prioridad = Prioridad.Media,
                 estado = Estado.Registrado,
-                rolAsignado = null
+                rolAsignado = null,
+                latitud = -33.4883,
+                longitud = -70.6233
             )
         )
 
@@ -35,7 +37,9 @@ class CasoSeguridadRepository {
                 descripcion = "Derivado al área de espacio público.",
                 prioridad = Prioridad.Alta,
                 estado = Estado.EnRevision,
-                rolAsignado = UsuarioRol.Operador
+                rolAsignado = UsuarioRol.Operador,
+                latitud = -33.4812,
+                longitud = -70.6255
             )
         )
 
@@ -48,7 +52,9 @@ class CasoSeguridadRepository {
                 descripcion = "Reparación informada por el área a cargo.",
                 prioridad = Prioridad.Baja,
                 estado = Estado.EnSeguimiento, // O interpretado como Resuelto
-                rolAsignado = UsuarioRol.Supervisor
+                rolAsignado = UsuarioRol.Supervisor,
+                latitud = -33.4891,
+                longitud = -70.6380
             )
         )
     }
