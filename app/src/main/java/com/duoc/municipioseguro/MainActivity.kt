@@ -5,22 +5,20 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.municipioseguro.Model.UsuarioRol
 import com.duoc.municipioseguro.ui.screens.AdministracionScreen
+import com.duoc.municipioseguro.ui.screens.AvisosScreen
 import com.duoc.municipioseguro.ui.screens.CrearCuentaScreen
+import com.duoc.municipioseguro.ui.screens.CrearReporteScreen
+import com.duoc.municipioseguro.ui.screens.DetalleCasoScreen
 import com.duoc.municipioseguro.ui.screens.HomeScreen
 import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.screens.OlvidoContrasenaScreen
@@ -104,14 +102,14 @@ fun AppNavegacion(
 
         if (rolUsuario is UsuarioRol.Residente) {
             var currentMainScreen by remember { mutableStateOf("home") }
+            var selectedCasoId by remember { mutableStateOf<String?>(null) }
 
             when (currentMainScreen) {
                 "home" -> HomeScreen(
                     onNavigateHome = { currentMainScreen = "home" },
                     onNavigateReportes = { currentMainScreen = "reports" },
-                    onNavigateAvisos = {
-                        Toast.makeText(context, "Sección Avisos (Próximamente)", Toast.LENGTH_SHORT).show()
-                    },
+                    onNavigateAvisos = { currentMainScreen = "avisos" },
+                    onCreateReportClick = { currentMainScreen = "create_report" },
                     onLogoutClick = {
                         viewModel.cerrarSesion()
                     }
@@ -120,28 +118,90 @@ fun AppNavegacion(
                     casos = listaCasos,
                     onNavigateHome = { currentMainScreen = "home" },
                     onNavigateReportes = { currentMainScreen = "reports" },
-                    onNavigateAvisos = {
-                        Toast.makeText(context, "Sección Avisos (Próximamente)", Toast.LENGTH_SHORT).show()
+                    onNavigateAvisos = { currentMainScreen = "avisos" },
+                    onReporteClick = { caso ->
+                        selectedCasoId = caso.id
+                        currentMainScreen = "report_detail"
                     },
                     onLogoutClick = {
                         viewModel.cerrarSesion()
                     }
                 )
+                "avisos" -> AvisosScreen(
+                    onNavigateHome = { currentMainScreen = "home" },
+                    onNavigateReportes = { currentMainScreen = "reports" },
+                    onNavigateAvisos = { currentMainScreen = "avisos" },
+                    onLogoutClick = {
+                        viewModel.cerrarSesion()
+                    }
+                )
+                "create_report" -> CrearReporteScreen(
+                    onBackClick = { currentMainScreen = "home" },
+                    onSubmitReport = { categoria, ubicacion, descripcion, prioridad ->
+                        val nuevoId = "SJ-2026-${(100..999).random()}"
+                        viewModel.registrarCaso(nuevoId, categoria, ubicacion, descripcion, prioridad)
+                        Toast.makeText(
+                            context,
+                            "Reporte $nuevoId registrado exitosamente",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        currentMainScreen = "reports"
+                    }
+                )
+                "report_detail" -> {
+                    val casoSeleccionado = listaCasos.find { it.id == selectedCasoId }
+                    if (casoSeleccionado != null) {
+                        DetalleCasoScreen(
+                            caso = casoSeleccionado,
+                            sesionActual = sesionActual,
+                            onBackClick = { currentMainScreen = "reports" },
+                            onCambiarEstado = { nuevoEstado ->
+                                viewModel.cambiarEstadoCaso(casoSeleccionado.id, nuevoEstado)
+                            },
+                            onAgregarObservacion = { notaTexto ->
+                                val autorRol = sesionActual?.rol ?: UsuarioRol.Residente
+                                viewModel.registrarObservacion(casoSeleccionado.id, notaTexto, autorRol)
+                            }
+                        )
+                    }
+                }
             }
         } else {
             // Operador, Supervisor o Administrador
-            AdministracionScreen(
-                casos = listaCasos,
-                onLogoutClick = {
-                    viewModel.cerrarSesion()
-                },
-                onNuevoCasoClick = {
-                    Toast.makeText(context, "Crear nuevo caso municipal", Toast.LENGTH_SHORT).show()
-                },
-                onGestionarCasoClick = { caso ->
-                    Toast.makeText(context, "Gestionar caso: ${caso.id}", Toast.LENGTH_SHORT).show()
+            var selectedCasoId by remember { mutableStateOf<String?>(null) }
+            var showingDetail by remember { mutableStateOf(false) }
+
+            if (showingDetail && selectedCasoId != null) {
+                val casoSeleccionado = listaCasos.find { it.id == selectedCasoId }
+                if (casoSeleccionado != null) {
+                    DetalleCasoScreen(
+                        caso = casoSeleccionado,
+                        sesionActual = sesionActual,
+                        onBackClick = { showingDetail = false },
+                        onCambiarEstado = { nuevoEstado ->
+                            viewModel.cambiarEstadoCaso(casoSeleccionado.id, nuevoEstado)
+                        },
+                        onAgregarObservacion = { notaTexto ->
+                            val autorRol = sesionActual?.rol ?: UsuarioRol.Operador
+                            viewModel.registrarObservacion(casoSeleccionado.id, notaTexto, autorRol)
+                        }
+                    )
                 }
-            )
+            } else {
+                AdministracionScreen(
+                    casos = listaCasos,
+                    onLogoutClick = {
+                        viewModel.cerrarSesion()
+                    },
+                    onNuevoCasoClick = {
+                        Toast.makeText(context, "Crear nuevo caso municipal", Toast.LENGTH_SHORT).show()
+                    },
+                    onGestionarCasoClick = { caso ->
+                        selectedCasoId = caso.id
+                        showingDetail = true
+                    }
+                )
+            }
         }
     }
 }
