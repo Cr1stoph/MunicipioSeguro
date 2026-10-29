@@ -10,5 +10,7 @@ data class CasoSeguridad(
     val estado: Estado,
     val rolAsignado: UsuarioRol?,
     val observaciones: List<Observacion> = emptyList(),
-    val urlEvidencia: String? = null
+    val urlEvidencia: String? = null,
+    val latitud: Double = -33.4883,
+    val longitud: Double = -70.6333
 )
