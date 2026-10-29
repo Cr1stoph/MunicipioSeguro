@@ -27,6 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.duoc.municipioseguro.Model.UsuarioRol
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -42,7 +46,8 @@ fun CrearCuentaScreen(
     var rolSeleccionado by remember { mutableStateOf<UsuarioRol>(UsuarioRol.Residente) }
     var mensajeError by remember { mutableStateOf<String?>(null) }
     var cuentaCreada by remember { mutableStateOf(false) }
-// PARA SEGUIR CON ESTA PANTALLA SE LE PUEDE AÑADIR UN BOTON DE ANIMACION Y LUEGO COLOCAR CUENTA CREADA AHORA INICIA SESION
+    var cargando by remember { mutableStateOf(false) }
+
     val primaryBlue = Color(0xFF1D58BA)
     val lightBlueBg = Color(0xFFEFF6FF)
     val textDark = Color(0xFF0F172A)
@@ -254,7 +259,7 @@ fun CrearCuentaScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "¡Cuenta creada con éxito! Redirigiendo...",
+                                text = "¡Cuenta creada con éxito! Ya puedes iniciar sesión.",
                                 color = Color(0xFF166534),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
@@ -268,7 +273,7 @@ fun CrearCuentaScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón Registrarse
+            // Botón Registrarse con animación de carga de 2 segundos
             Button(
                 onClick = {
                     when {
@@ -280,23 +285,38 @@ fun CrearCuentaScreen(
                         }
                         else -> {
                             mensajeError = null
-                            cuentaCreada = true
-                            onAccountCreated(correo)
+                            cargando = true
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(2000)
+                                cargando = false
+                                cuentaCreada = true
+                                delay(1200)
+                                onAccountCreated(correo)
+                            }
                         }
                     }
                 },
+                enabled = !cargando,
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text(
-                    text = "Registrar cuenta",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (cargando) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.White
+                    )
+                } else {
+                    Text(
+                        text = "Registrar cuenta",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
