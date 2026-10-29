@@ -137,9 +137,16 @@ fun AppNavegacion(
                 )
                 "create_report" -> CrearReporteScreen(
                     onBackClick = { currentMainScreen = "home" },
-                    onSubmitReport = { categoria, ubicacion, descripcion, prioridad ->
+                    onSubmitReport = { categoria, ubicacion, descripcion, prioridad, urlEvidencia ->
                         val nuevoId = "SJ-2026-${(100..999).random()}"
-                        viewModel.registrarCaso(nuevoId, categoria, ubicacion, descripcion, prioridad)
+                        viewModel.registrarCaso(
+                            id = nuevoId,
+                            categoria = categoria,
+                            ubicacion = ubicacion,
+                            descripcion = descripcion,
+                            prioridad = prioridad,
+                            urlEvidencia = urlEvidencia
+                        )
                         Toast.makeText(
                             context,
                             "Reporte $nuevoId registrado exitosamente",

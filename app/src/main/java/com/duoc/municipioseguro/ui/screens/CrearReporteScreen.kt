@@ -1,6 +1,11 @@
 package com.duoc.municipioseguro.ui.screens
 
+import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,7 +22,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +39,7 @@ import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
 @Composable
 fun CrearReporteScreen(
     onBackClick: () -> Unit,
-    onSubmitReport: (categoria: CategoriaCaso, ubicacion: String, descripcion: String, prioridad: Prioridad) -> Unit
+    onSubmitReport: (categoria: CategoriaCaso, ubicacion: String, descripcion: String, prioridad: Prioridad, urlEvidencia: String?) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -40,7 +47,7 @@ fun CrearReporteScreen(
     var ubicacion by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
     var prioridadSeleccionada by remember { mutableStateOf<Prioridad>(Prioridad.Media) }
-    var fotoAdjunta by remember { mutableStateOf(false) }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     val primaryBlue = Color(0xFF23559C)
     val lightBlueBg = Color(0xFFE8F0FE)
@@ -298,7 +305,7 @@ fun CrearReporteScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Sección 5: Adjuntar Foto / Evidencia (Simulado)
+            // Evidencia Fotográfica (CamaraFotos)
             Text(
                 text = "5. Evidencia fotográfica (Opcional)",
                 fontWeight = FontWeight.Bold,
@@ -307,48 +314,10 @@ fun CrearReporteScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        fotoAdjunta = !fotoAdjunta
-                        Toast
-                            .makeText(
-                                context,
-                                if (fotoAdjunta) "Fotografía adjunta correctamente" else "Fotografía removida",
-                                Toast.LENGTH_SHORT
-                            )
-                            .show()
-                    },
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    if (fotoAdjunta) primaryBlue else Color(0xFFCBD5E1)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = if (fotoAdjunta) Icons.Outlined.CheckCircle else Icons.Outlined.CameraAlt,
-                        contentDescription = "Adjuntar foto",
-                        tint = if (fotoAdjunta) Color(0xFF15803D) else primaryBlue,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (fotoAdjunta) "Foto adjunta (evidencia.jpg)" else "Tomar foto o subir desde la galería",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (fotoAdjunta) Color(0xFF15803D) else primaryBlue
-                    )
-                }
-            }
+            CamaraFotos(
+                bitmap = bitmap,
+                onBitmapChange = { bitmap = it }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -387,7 +356,13 @@ fun CrearReporteScreen(
                     if (ubicacion.isBlank() || descripcion.isBlank()) {
                         Toast.makeText(context, "Por favor completa la ubicación y descripción", Toast.LENGTH_SHORT).show()
                     } else {
-                        onSubmitReport(categoriaSeleccionada, ubicacion, descripcion, prioridadSeleccionada)
+                        onSubmitReport(
+                            categoriaSeleccionada,
+                            ubicacion,
+                            descripcion,
+                            prioridadSeleccionada,
+                            if (bitmap != null) "evidencia_foto.jpg" else null
+                        )
                     }
                 },
                 modifier = Modifier
@@ -410,6 +385,101 @@ fun CrearReporteScreen(
     }
 }
 
+@Composable
+fun CamaraFotos(
+    bitmap: Bitmap?,
+    onBitmapChange: (Bitmap?) -> Unit
+) {
+    val context = LocalContext.current
+    val primaryBlue = Color(0xFF23559C)
+    val textSecondary = Color(0xFF64748B)
+
+    // Lanzador de cámara
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bmp ->
+        if (bmp != null) {
+            onBitmapChange(bmp)
+            Toast.makeText(context, "Imagen ingresada con éxito", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                cameraLauncher.launch(null)
+            },
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            1.dp,
+            if (bitmap != null) Color(0xFF15803D) else Color(0xFFCBD5E1)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Evidencia fotográfica",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF15803D),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Imagen ingresada con éxito",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF15803D)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Toca para tomar otra foto",
+                    fontSize = 12.sp,
+                    color = textSecondary
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CameraAlt,
+                        contentDescription = "Tomar foto",
+                        tint = primaryBlue,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Tomar fotografía con la cámara",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = primaryBlue
+                    )
+                }
+            }
+        }
+    }
+}
+
 private data class CategoriaItem(
     val titulo: String,
     val subtitulo: String,
@@ -423,7 +493,7 @@ fun CrearReporteScreenPreview() {
     MunicipioSeguroTheme {
         CrearReporteScreen(
             onBackClick = {},
-            onSubmitReport = { _, _, _, _ -> }
+            onSubmitReport = { _, _, _, _, _ -> }
         )
     }
 }

@@ -54,7 +54,8 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
         descripcion: String,
         prioridad: Prioridad,
         latitud: Double? = null,
-        longitud: Double? = null
+        longitud: Double? = null,
+        urlEvidencia: String? = null
     ) {
         val (latFinal, lngFinal) = if (latitud != null && longitud != null) {
             Pair(latitud, longitud)
@@ -72,7 +73,7 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
             estado = Estado.Registrado,
             rolAsignado = null,
             observaciones = emptyList(),
-            urlEvidencia = null,
+            urlEvidencia = urlEvidencia,
             latitud = latFinal,
             longitud = lngFinal
         )
