@@ -32,6 +32,7 @@ import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
 @Composable
 fun LoginScreen(
     onLoginSuccess: (UsuarioRol) -> Unit,
+    onLoginSubmit: (correo: String, contrasena: String, rolSimulado: UsuarioRol) -> Unit = { _, _, rol -> onLoginSuccess(rol) },
     onCreateAccountClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {}
 ) {
@@ -39,6 +40,7 @@ fun LoginScreen(
     var contrasena by remember { mutableStateOf("") }
     var contrasenaVisible by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf<UsuarioRol>(UsuarioRol.Residente) }
+    var mensajeError by remember { mutableStateOf<String?>(null) }
 
     val primaryBlue = Color(0xFF1D58BA)
     val lightBlueBg = Color(0xFFEFF6FF)
@@ -164,6 +166,24 @@ fun LoginScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    // Mensaje de error si la validación falla
+                    if (mensajeError != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Surface(
+                            color = Color(0xFFFEF2F2),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = mensajeError!!,
+                                color = Color(0xFF991B1B),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -221,7 +241,27 @@ fun LoginScreen(
 
             // Botón Principal: Iniciar sesión
             Button(
-                onClick = { onLoginSuccess(rolSeleccionado) },
+                onClick = {
+                    val correoTrim = correo.trim()
+                    val contrasenaTrim = contrasena.trim()
+                    val emailPattern = android.util.Patterns.EMAIL_ADDRESS
+
+                    when {
+                        correoTrim.isBlank() -> {
+                            mensajeError = "Por favor ingresa tu correo electrónico."
+                        }
+                        !emailPattern.matcher(correoTrim).matches() -> {
+                            mensajeError = "Ingresa un correo electrónico válido (ejemplo@dominio.cl o .com)."
+                        }
+                        contrasenaTrim.isBlank() -> {
+                            mensajeError = "Por favor ingresa tu contraseña."
+                        }
+                        else -> {
+                            mensajeError = null
+                            onLoginSubmit(correoTrim, contrasenaTrim, rolSeleccionado)
+                        }
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier

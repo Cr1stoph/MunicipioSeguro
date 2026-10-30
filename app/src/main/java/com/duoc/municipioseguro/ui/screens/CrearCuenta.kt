@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun CrearCuentaScreen(
     onBackToLogin: () -> Unit,
-    onAccountCreated: (String) -> Unit = {}
+    onAccountCreated: (correo: String, contrasena: String, rol: UsuarioRol) -> Unit = { _, _, _ -> }
 ) {
     var nombre by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
@@ -291,7 +291,7 @@ fun CrearCuentaScreen(
                                 cargando = false
                                 cuentaCreada = true
                                 delay(1200)
-                                onAccountCreated(correo)
+                                onAccountCreated(correo, contrasena, rolSeleccionado)
                             }
                         }
                     }

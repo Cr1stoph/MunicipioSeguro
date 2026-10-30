@@ -1,0 +1,4 @@
+## Ejemplo de configuración local (Copia este contenido a tu local.properties)
+#
+# sdk.dir=/Ubicación/de/tu/Android/SDK
+# MAPS_API_KEY=TuClaveDeApiDeGoogleMapsAqui
