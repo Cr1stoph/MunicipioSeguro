@@ -22,6 +22,7 @@ import com.duoc.municipioseguro.ui.screens.DetalleCasoScreen
 import com.duoc.municipioseguro.ui.screens.HomeScreen
 import com.duoc.municipioseguro.ui.screens.LoginScreen
 import com.duoc.municipioseguro.ui.screens.OlvidoContrasenaScreen
+import com.duoc.municipioseguro.ui.screens.PerfilUsuarioScreen
 import com.duoc.municipioseguro.ui.screens.ReportesScreen
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
 import com.duoc.municipioseguro.viewModel.CasoSeguridadViewModel
@@ -127,6 +128,7 @@ fun AppNavegacion(
                     onNavigateReportes = { currentMainScreen = "reports" },
                     onNavigateAvisos = { currentMainScreen = "avisos" },
                     onCreateReportClick = { currentMainScreen = "create_report" },
+                    onProfileClick = { currentMainScreen = "profile" },
                     onLogoutClick = {
                         viewModel.cerrarSesion()
                     }
@@ -151,6 +153,11 @@ fun AppNavegacion(
                     onLogoutClick = {
                         viewModel.cerrarSesion()
                     }
+                )
+                "profile" -> PerfilUsuarioScreen(
+                    sesionActual = sesionActual,
+                    onBackClick = { currentMainScreen = "home" },
+                    onLogoutClick = { viewModel.cerrarSesion() }
                 )
                 "create_report" -> CrearReporteScreen(
                     onBackClick = { currentMainScreen = "home" },

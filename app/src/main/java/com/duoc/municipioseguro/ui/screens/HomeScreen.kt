@@ -12,7 +12,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.Schedule
@@ -38,6 +38,7 @@ fun HomeScreen(
     onNavigateReportes: () -> Unit = {},
     onNavigateAvisos: () -> Unit = {},
     onCreateReportClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onLogoutClick: () -> Unit
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
@@ -114,14 +115,14 @@ fun HomeScreen(
                     }
                 }
                 IconButton(
-                    onClick = onLogoutClick,
+                    onClick = onProfileClick,
                     modifier = Modifier
-                        .background(Color(0xFFF0F0F0), RoundedCornerShape(24.dp))
+                        .background(Color(0xFFE8F0FE), RoundedCornerShape(24.dp))
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = "Cerrar sesión (Temporal)",
-                        tint = Color.Gray
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = "Mi Perfil",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
