@@ -1,4 +1,4 @@
-# 🛡️ MunicipioSeguro - Aplicación de Seguridad Comunal y Reporte Ciudadano
+# MunicipioSeguro - Aplicación de Seguridad Comunal y Reporte Ciudadano
 
 **MunicipioSeguro** es una aplicación móvil nativa para Android desarrollada con **Kotlin** y **Jetpack Compose**, diseñada para fortalecer la seguridad y la convivencia comunal en la **Municipalidad de San Joaquín**.
 
@@ -6,29 +6,29 @@ La plataforma permite a los vecinos y residentes reportar situaciones no urgente
 
 ---
 
-## ✨ Características Principales
+## Características Principales
 
-### 👥 Para los Residentes / Vecinos
-* 🔑 **Autenticación con Base de Datos Local**: Registro e inicio de sesión seguro almacenado en una base de datos SQLite con **Room Database**.
-* 🔐 **Persistencia de Sesión**: La sesión del usuario se mantiene activa automáticamente entre reinicios de la aplicación mediante `SharedPreferences`.
-* 📝 **Creación de Reportes**: Formulario intuitivo para ingresar incidentes seleccionando categoría (*Alumbrado público, Espacio público, Convivencia vecinal, Otro*), ubicación, nivel de urgencia/prioridad (*Baja, Media, Alta*) y descripción.
-* 📸 **Captura de Evidencia Fotográfica**: Integración nativa con la cámara del teléfono (`TakePicturePreview`) para adjuntar fotografías a los reportes.
-* 📍 **Geocodificación GPS Automática**: Convierte las direcciones de texto escritas por el usuario en coordenadas GPS reales (latitud y longitud) en la comuna de San Joaquín.
-* 📋 **Mis Reportes y Comunidad**: Pestañas para consultar tanto los reportes personales como la lista pública de incidentes reportados en la comuna.
-* 🔍 **Detalle y Seguimiento del Caso**: Ficha completa del incidente con mapa, estado actual y una línea de tiempo cronológica con los avances u observaciones del municipio.
-* 📢 **Avisos Comunales**: Sección con comunicados oficiales de la municipalidad sobre cortes programados de servicios, operativos veterinarios y talleres vecinales.
-* 👤 **Perfil de Usuario**: Vista de cuenta personalizable donde se puede cambiar la foto de perfil utilizando la cámara del dispositivo.
-
----
-
-### 💼 Para Operadores, Supervisores y Administradores
-* 🛠️ **Panel de Administración**: Vista de control que permite a los funcionarios municipales revisar todos los incidentes recibidos.
-* 🔄 **Actualización de Estado en Tiempo Real**: Capacidad de cambiar el estado de un caso entre *Registrado*, *En revisión*, *Derivado a cuadrilla* y *En seguimiento / Resuelto*.
-* 💬 **Historial de Observaciones**: Posibilidad de añadir notas técnicas y comentarios oficiales a la línea de tiempo del reporte para informar al vecino.
+### Para los Residentes / Vecinos
+* **Autenticación con Base de Datos Local**: Registro e inicio de sesión seguro almacenado en una base de datos SQLite con **Room Database**.
+* **Persistencia de Sesión**: La sesión del usuario se mantiene activa automáticamente entre reinicios de la aplicación mediante `SharedPreferences`.
+* **Creación de Reportes**: Formulario intuitivo para ingresar incidentes seleccionando categoría (*Alumbrado público, Espacio público, Convivencia vecinal, Otro*), ubicación, nivel de urgencia/prioridad (*Baja, Media, Alta*) y descripción.
+* **Captura de Evidencia Fotográfica**: Integración nativa con la cámara del teléfono (`TakePicturePreview`) para adjuntar fotografías a los reportes.
+* **Geocodificación GPS Automática**: Convierte las direcciones de texto escritas por el usuario en coordenadas GPS reales (latitud y longitud) en la comuna de San Joaquín.
+* **Mis Reportes y Comunidad**: Pestañas para consultar tanto los reportes personales como la lista pública de incidentes reportados en la comuna.
+* **Detalle y Seguimiento del Caso**: Ficha completa del incidente con mapa, estado actual y una línea de tiempo cronológica con los avances u observaciones del municipio.
+* **Avisos Comunales**: Sección con comunicados oficiales de la municipalidad sobre cortes programados de servicios, operativos veterinarios y talleres vecinales.
+* **Perfil de Usuario**: Vista de cuenta personalizable donde se puede cambiar la foto de perfil utilizando la cámara del dispositivo.
 
 ---
 
-## 🏛️ Arquitectura del Proyecto (MVVM + Clean Architecture)
+### Para Operadores, Supervisores y Administradores
+* **Panel de Administración**: Vista de control que permite a los funcionarios municipales revisar todos los incidentes recibidos.
+* **Actualización de Estado en Tiempo Real**: Capacidad de cambiar el estado de un caso entre *Registrado*, *En revisión*, *Derivado a cuadrilla* y *En seguimiento / Resuelto*.
+* **Historial de Observaciones**: Posibilidad de añadir notas técnicas y comentarios oficiales a la línea de tiempo del reporte para informar al vecino.
+
+---
+
+## Arquitectura del Proyecto (MVVM + Clean Architecture)
 
 El proyecto está construido siguiendo las mejores prácticas de desarrollo Android recomendadas por Google, utilizando el patrón **Model-View-ViewModel (MVVM)** y **Kotlin Coroutines**:
 
@@ -59,7 +59,7 @@ com.duoc.municipioseguro
 
 ---
 
-## 🛠️ Tecnologías y Librerías Utilizadas
+## Tecnologías y Librerías Utilizadas
 
 * **Lenguaje**: [Kotlin](https://kotlinlang.org/)
 * **UI Framework**: [Jetpack Compose](https://developer.android.com/jetpack/compose) + **Material Design 3**
@@ -71,7 +71,7 @@ com.duoc.municipioseguro
 
 ---
 
-## 🔑 Credenciales de Prueba por Defecto
+## Credenciales de Prueba por Defecto
 
 Al abrir la aplicación por primera vez, la base de datos local **Room** se prepuebla automáticamente con las siguientes cuentas de prueba:
 
@@ -85,7 +85,7 @@ Al abrir la aplicación por primera vez, la base de datos local **Room** se prep
 
 ---
 
-## 🚀 Cómo Ejecutar el Proyecto
+## Cómo Ejecutar el Proyecto
 
 1. **Requisitos Previos**:
    * Android Studio Ladybug (o superior).
@@ -100,6 +100,6 @@ Al abrir la aplicación por primera vez, la base de datos local **Room** se prep
 
 ---
 
-## 📝 Licencia y Créditos
+## Licencia y Créditos
 
 Proyecto desarrollado como prototipo funcional para la **Municipalidad de San Joaquín** y la evaluación académica en **DUOC UC**. Todos los datos e incidentes cargados son de carácter ficticio para demostración de software.
