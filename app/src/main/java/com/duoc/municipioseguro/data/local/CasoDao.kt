@@ -21,7 +21,4 @@ interface CasoDao {
 
     @Query("UPDATE casos SET observacionesJson = :observacionesJson WHERE id = :idCaso")
     suspend fun actualizarObservaciones(idCaso: String, observacionesJson: String): Int
-
-    @Query("SELECT COUNT(*) FROM casos")
-    suspend fun contarCasos(): Int
 }

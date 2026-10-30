@@ -16,7 +16,4 @@ interface UsuarioDao {
 
     @Query("SELECT * FROM usuarios WHERE correo = :correo LIMIT 1")
     suspend fun obtenerPorCorreo(correo: String): UsuarioEntity?
-
-    @Query("SELECT COUNT(*) FROM usuarios")
-    suspend fun contarUsuarios(): Int
 }

@@ -171,7 +171,4 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun obtenerDetalleCaso(id: String): CasoSeguridad? {
-        return _listaCasos.value.find { it.id == id }
-    }
 }
