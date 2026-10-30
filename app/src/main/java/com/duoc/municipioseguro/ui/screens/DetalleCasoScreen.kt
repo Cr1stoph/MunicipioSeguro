@@ -1,6 +1,9 @@
 package com.duoc.municipioseguro.ui.screens
 
+import android.graphics.BitmapFactory
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,7 +18,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -261,9 +266,86 @@ fun DetalleCasoScreen(
                 }
             }
 
+            // Evidencia Fotográfica solo se muestra justo debajo del mapa si caso.urlEvidencia != null)
+            if (caso.urlEvidencia != null) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.PhotoCamera,
+                                contentDescription = null,
+                                tint = primaryBlue,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Evidencia fotográfica adjunta",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = textDark
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val bitmapEvidencia = remember(caso.urlEvidencia) {
+                            try {
+                                BitmapFactory.decodeFile(caso.urlEvidencia)
+                            } catch (_: Exception) {
+                                null
+                            }
+                        }
+
+                        if (bitmapEvidencia != null) {
+                            Image(
+                                bitmap = bitmapEvidencia.asImageBitmap(),
+                                contentDescription = "Foto de evidencia",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(140.dp)
+                                    .background(Color(0xFFE8F0FE), RoundedCornerShape(12.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Image,
+                                        contentDescription = null,
+                                        tint = primaryBlue,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Fotografía registrada con éxito",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = primaryBlue
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Tarjeta 2: Cambio de Estado (Solo si es Operador/Supervisor/Admin o Muestra rápida)
+            // Tarjeta 2: Cambio de Estado (Solo si es Operador/Supervisor/Admin)
             if (esGestionador) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -448,7 +530,7 @@ fun ObservacionItem(obs: Observacion) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = Color(0xFFF8FAFC),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
     ) {
         Column(
             modifier = Modifier
@@ -496,7 +578,8 @@ fun DetalleCasoScreenPreview() {
         rolAsignado = UsuarioRol.Operador,
         observaciones = listOf(
             Observacion("1", "Derivado a cuadrilla de emergencia eléctrica", System.currentTimeMillis() - 40000000, UsuarioRol.Operador)
-        )
+        ),
+        urlEvidencia = "evidencia_ejemplo.jpg"
     )
 
     MunicipioSeguroTheme {

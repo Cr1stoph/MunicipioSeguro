@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.duoc.municipioseguro.Model.CategoriaCaso
 import com.duoc.municipioseguro.Model.Prioridad
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +50,7 @@ fun CrearReporteScreen(
     var descripcion by remember { mutableStateOf("") }
     var prioridadSeleccionada by remember { mutableStateOf<Prioridad>(Prioridad.Media) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var imagePath by remember { mutableStateOf<String?>(null) }
 
     val primaryBlue = Color(0xFF23559C)
     val lightBlueBg = Color(0xFFE8F0FE)
@@ -151,7 +154,7 @@ fun CrearReporteScreen(
             val categoriasList = listOf(
                 CategoriaItem("Alumbrado público", "Postes apagados, cables expuestos", Icons.Outlined.Lightbulb, CategoriaCaso.AlumbradoPublico),
                 CategoriaItem("Espacio público", "Veredas dañadas, escombros, plazas", Icons.Outlined.Park, CategoriaCaso.EspacioPublico),
-                CategoriaItem("Convivencia vecinal", "Ruidos molestos, ruidos en plazas", Icons.Outlined.People, CategoriaCaso.ConvivenciaVecinal),
+                CategoriaItem("Convivencia vecinal", "Ruidos molestos, ruidos inoportunos", Icons.Outlined.People, CategoriaCaso.ConvivenciaVecinal),
                 CategoriaItem("Otra situación", "Otras situaciones no urgentes", Icons.AutoMirrored.Outlined.Help, CategoriaCaso.OtraSituacion)
             )
 
@@ -316,7 +319,8 @@ fun CrearReporteScreen(
 
             CamaraFotos(
                 bitmap = bitmap,
-                onBitmapChange = { bitmap = it }
+                onBitmapChange = { bitmap = it },
+                onPathChange = { imagePath = it }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -361,7 +365,7 @@ fun CrearReporteScreen(
                             ubicacion,
                             descripcion,
                             prioridadSeleccionada,
-                            if (bitmap != null) "evidencia_foto.jpg" else null
+                            imagePath
                         )
                     }
                 },
@@ -388,7 +392,8 @@ fun CrearReporteScreen(
 @Composable
 fun CamaraFotos(
     bitmap: Bitmap?,
-    onBitmapChange: (Bitmap?) -> Unit
+    onBitmapChange: (Bitmap?) -> Unit,
+    onPathChange: (String?) -> Unit
 ) {
     val context = LocalContext.current
     val primaryBlue = Color(0xFF23559C)
@@ -400,6 +405,16 @@ fun CamaraFotos(
     ) { bmp ->
         if (bmp != null) {
             onBitmapChange(bmp)
+            try {
+                val file = File(context.cacheDir, "evidencia_${System.currentTimeMillis()}.jpg")
+                val fos = FileOutputStream(file)
+                bmp.compress(Bitmap.CompressFormat.JPEG, 90, fos)
+                fos.flush()
+                fos.close()
+                onPathChange(file.absolutePath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             Toast.makeText(context, "Imagen ingresada con éxito", Toast.LENGTH_SHORT).show()
         }
     }
