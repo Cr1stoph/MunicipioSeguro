@@ -12,5 +12,6 @@ data class CasoSeguridad(
     val observaciones: List<Observacion> = emptyList(),
     val urlEvidencia: String? = null,
     val latitud: Double = -33.4883,
-    val longitud: Double = -70.6333
+    val longitud: Double = -70.6333,
+    val autorEmail: String? = "vecino@sanjoaquin.cl"
 )
