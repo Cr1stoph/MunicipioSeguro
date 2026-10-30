@@ -1,6 +1,7 @@
 package com.duoc.municipioseguro.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,15 +30,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.duoc.municipioseguro.Model.CasoSeguridad
+import com.duoc.municipioseguro.Model.Estado
+import com.duoc.municipioseguro.Model.SesionUsuario
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    casos: List<CasoSeguridad> = emptyList(),
+    sesionActual: SesionUsuario? = null,
     onNavigateHome: () -> Unit = {},
     onNavigateReportes: () -> Unit = {},
     onNavigateAvisos: () -> Unit = {},
     onCreateReportClick: () -> Unit = {},
+    onReporteClick: (CasoSeguridad) -> Unit = {},
     onLogoutClick: () -> Unit
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
@@ -220,6 +229,15 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Cálculo dinámico de reportes de la cuenta
+                val emailUsuario = sesionActual?.nombreGenerico ?: "vecino@sanjoaquin.cl"
+                val misCasos = casos.filter { it.autorEmail == emailUsuario }
+
+                val enSeguimientoCount = misCasos.count { it.estado is Estado.Registrado || it.estado is Estado.EnRevision || it.estado is Estado.EnSeguimiento }
+                val resueltoCount = misCasos.count { it.estado is Estado.Derivado }
+
+                val ultimoCaso = misCasos.maxByOrNull { it.fechaHora }
+
                 // Metrics Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -242,7 +260,7 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.Top
                             ) {
                                 Text(
-                                    text = "2",
+                                    text = enSeguimientoCount.toString(),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 32.sp
                                 )
@@ -278,7 +296,7 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.Top
                             ) {
                                 Text(
-                                    text = "1",
+                                    text = resueltoCount.toString(),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 32.sp
                                 )
@@ -300,54 +318,88 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Recent Report Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
+                // Recent Report Card (Dinámico)
+                if (ultimoCaso != null) {
+                    val dateFormat = SimpleDateFormat("d 'oct.'", Locale("es", "ES"))
+                    val fechaFormateada = dateFormat.format(Date(ultimoCaso.fechaHora))
+
+                    val (badgeText, badgeColor) = when (ultimoCaso.estado) {
+                        is Estado.Registrado -> "Recibido" to Color(0xFF23559C)
+                        is Estado.EnRevision, is Estado.EnSeguimiento -> "En gestión" to Color(0xFFD97706)
+                        is Estado.Derivado -> "Resuelto" to Color(0xFF15803D)
+                    }
+
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .clickable { onReporteClick(ultimoCaso) },
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = ultimoCaso.categoria.javaClass.simpleName.replace("AlumbradoPublico", "Luminaria apagada").replace("EspacioPublico", "Vereda obstruida"),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "${ultimoCaso.id} · $fechaFormateada",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = Color(0xFFE8F0FE)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CheckCircle,
+                                        contentDescription = null,
+                                        tint = badgeColor,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = badgeText,
+                                        color = badgeColor,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onCreateReportClick() },
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "Luminaria apagada",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "SJ-2026-0148 · 15 oct.",
+                                text = "Aún no has registrado reportes. Toca aquí para crear el primero.",
                                 color = Color.Gray,
                                 fontSize = 14.sp
                             )
-                        }
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color(0xFFE8F0FE)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.CheckCircle, // Aproximación
-                                    contentDescription = null,
-                                    tint = Color(0xFF23559C),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Recibido",
-                                    color = Color(0xFF23559C),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
                         }
                     }
                 }

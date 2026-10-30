@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.duoc.municipioseguro.Model.CasoSeguridad
 import com.duoc.municipioseguro.Model.Estado
+import com.duoc.municipioseguro.Model.SesionUsuario
 import com.duoc.municipioseguro.ui.theme.MunicipioSeguroTheme
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,6 +37,7 @@ import java.util.*
 @Composable
 fun ReportesScreen(
     casos: List<CasoSeguridad>,
+    sesionActual: SesionUsuario? = null,
     onNavigateHome: () -> Unit,
     onNavigateReportes: () -> Unit,
     onNavigateAvisos: () -> Unit,
@@ -164,6 +166,26 @@ fun ReportesScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Filtrado por Pestaña ("Mis reportes" vs "Comunidad")
+            val emailUsuario = sesionActual?.nombreGenerico ?: "vecino@sanjoaquin.cl"
+            val casosPestana = if (selectedTab == 0) {
+                casos.filter { it.autorEmail == emailUsuario }
+            } else {
+                casos
+            }
+
+            // Conteo dinámico de estados para los chips de filtro
+            val cantTodos = casosPestana.size
+            val cantEnSeguimiento = casosPestana.count { it.estado is Estado.Registrado || it.estado is Estado.EnRevision || it.estado is Estado.EnSeguimiento }
+            val cantResueltos = casosPestana.count { it.estado is Estado.Derivado }
+
+            // Aplicar filtro de estado seleccionado
+            val casosVisibles = when (selectedFilter) {
+                1 -> casosPestana.filter { it.estado is Estado.Registrado || it.estado is Estado.EnRevision || it.estado is Estado.EnSeguimiento }
+                2 -> casosPestana.filter { it.estado is Estado.Derivado }
+                else -> casosPestana
+            }
+
             // Filter Chips
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -172,7 +194,7 @@ fun ReportesScreen(
                 FilterChip(
                     selected = selectedFilter == 0,
                     onClick = { selectedFilter = 0 },
-                    label = { Text("Todos · ${casos.size}") },
+                    label = { Text("Todos · $cantTodos") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = Color(0xFF23559C),
                         selectedLabelColor = Color.White
@@ -181,7 +203,7 @@ fun ReportesScreen(
                 FilterChip(
                     selected = selectedFilter == 1,
                     onClick = { selectedFilter = 1 },
-                    label = { Text("En seguimiento · 2") },
+                    label = { Text("En seguimiento · $cantEnSeguimiento") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = Color(0xFF23559C),
                         selectedLabelColor = Color.White
@@ -190,7 +212,7 @@ fun ReportesScreen(
                 FilterChip(
                     selected = selectedFilter == 2,
                     onClick = { selectedFilter = 2 },
-                    label = { Text("Resueltos · 1") },
+                    label = { Text("Resueltos · $cantResueltos") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = Color(0xFF23559C),
                         selectedLabelColor = Color.White
@@ -206,7 +228,7 @@ fun ReportesScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${casos.size} reportes visibles",
+                    text = "${casosVisibles.size} reportes visibles",
                     color = Color.Gray,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
@@ -222,15 +244,30 @@ fun ReportesScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // LazyColumn of Reports
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(casos) { caso ->
-                    ReporteCard(caso = caso, onClick = { onReporteClick(caso) })
+            if (casosVisibles.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (selectedTab == 0) "Aún no has creado reportes en esta categoría." else "No se encontraron reportes en esta categoría.",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
                 }
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(casosVisibles) { caso ->
+                        ReporteCard(caso = caso, onClick = { onReporteClick(caso) })
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
         }
@@ -242,9 +279,8 @@ fun ReporteCard(caso: CasoSeguridad, onClick: () -> Unit = {}) {
     // Definir color y texto del badge según estado
     val (badgeText, badgeBgColor, badgeTextColor) = when (caso.estado) {
         is Estado.Registrado -> Triple("Recibido", Color(0xFFE8F0FE), Color(0xFF23559C))
-        is Estado.EnRevision -> Triple("En gestión", Color(0xFFFEF3C7), Color(0xFFD97706))
-        is Estado.EnSeguimiento -> Triple("Resuelto", Color(0xFFDCFCE7), Color(0xFF15803D))
-        else -> Triple("Recibido", Color(0xFFE8F0FE), Color(0xFF23559C))
+        is Estado.EnRevision, is Estado.EnSeguimiento -> Triple("En seguimiento", Color(0xFFFEF3C7), Color(0xFFD97706))
+        is Estado.Derivado -> Triple("Resuelto", Color(0xFFDCFCE7), Color(0xFF15803D))
     }
 
     // Formatear fecha aproximada o usar la fecha del objeto

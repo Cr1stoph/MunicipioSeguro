@@ -1,7 +1,6 @@
 package com.duoc.municipioseguro.viewModel
 
 import android.app.Application
-import android.content.Context
 import android.location.Geocoder
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,10 +21,9 @@ import java.util.Locale
 
 class CasoSeguridadViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository(application)
-    private val casoRepository = CasoSeguridadRepository()
-    private var contadorObservaciones = 1
+    private val casoRepository = CasoSeguridadRepository(application)
 
-    private val _listaCasos = MutableStateFlow< List<CasoSeguridad>>(emptyList())
+    private val _listaCasos = MutableStateFlow<List<CasoSeguridad>>(emptyList())
     val listaCasos: StateFlow<List<CasoSeguridad>> = _listaCasos.asStateFlow()
 
     private val _sesionActual = MutableStateFlow<SesionUsuario?>(authRepository.obtenerSesionActual())
@@ -35,8 +33,10 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
         actualizarListaCasos()
     }
 
-    private fun actualizarListaCasos(){
-        _listaCasos.value = casoRepository.obtenerTodosLosCasos()
+    private fun actualizarListaCasos() {
+        viewModelScope.launch {
+            _listaCasos.value = casoRepository.obtenerTodosLosCasos()
+        }
     }
 
     fun iniciarSesionConRoom(
@@ -79,12 +79,12 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun iniciarSesionSimulada(rol: UsuarioRol){
+    fun iniciarSesionSimulada(rol: UsuarioRol) {
         val sesion = authRepository.iniciarSesionSimulada(rol)
         _sesionActual.value = sesion
     }
 
-    fun cerrarSesion(){
+    fun cerrarSesion() {
         authRepository.cerrarSesion()
         _sesionActual.value = null
     }
@@ -99,28 +99,31 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
         longitud: Double? = null,
         urlEvidencia: String? = null
     ) {
-        val (latFinal, lngFinal) = if (latitud != null && longitud != null) {
-            Pair(latitud, longitud)
-        } else {
-            geocodificarUbicacion(ubicacion)
-        }
+        viewModelScope.launch {
+            val (latFinal, lngFinal) = if (latitud != null && longitud != null) {
+                Pair(latitud, longitud)
+            } else {
+                geocodificarUbicacion(ubicacion)
+            }
 
-        val nuevoCaso = CasoSeguridad(
-            id = id,
-            categoria = categoria,
-            fechaHora = System.currentTimeMillis(),
-            ubicacion = ubicacion,
-            descripcion = descripcion,
-            prioridad = prioridad,
-            estado = Estado.Registrado,
-            rolAsignado = null,
-            observaciones = emptyList(),
-            urlEvidencia = urlEvidencia,
-            latitud = latFinal,
-            longitud = lngFinal
-        )
-        casoRepository.guardarNuevoCaso(nuevoCaso)
-        actualizarListaCasos()
+            val nuevoCaso = CasoSeguridad(
+                id = id,
+                categoria = categoria,
+                fechaHora = System.currentTimeMillis(),
+                ubicacion = ubicacion,
+                descripcion = descripcion,
+                prioridad = prioridad,
+                estado = Estado.Registrado,
+                rolAsignado = null,
+                observaciones = emptyList(),
+                urlEvidencia = urlEvidencia,
+                latitud = latFinal,
+                longitud = lngFinal,
+                autorEmail = _sesionActual.value?.nombreGenerico ?: "vecino@sanjoaquin.cl"
+            )
+            casoRepository.guardarNuevoCaso(nuevoCaso)
+            actualizarListaCasos()
+        }
     }
 
     private fun geocodificarUbicacion(ubicacionTexto: String): Pair<Double, Double> {
@@ -137,33 +140,38 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
                 val primeraUbicacion = resultados[0]
                 Pair(primeraUbicacion.latitude, primeraUbicacion.longitude)
             } else {
-                // Fallback: Generar coordenadas relativas a San Joaquín basadas en el texto
                 val offsetLat = (kotlin.math.abs(ubicacionTexto.hashCode()) % 50) / 5000.0
                 val offsetLng = (kotlin.math.abs(ubicacionTexto.hashCode()) % 50) / 5000.0
                 Pair(baseLat + offsetLat, baseLng + offsetLng)
             }
         } catch (e: Exception) {
-            // Fallback en caso de error de red o geocodificación
             val offsetLat = (kotlin.math.abs(ubicacionTexto.hashCode()) % 50) / 5000.0
             val offsetLng = (kotlin.math.abs(ubicacionTexto.hashCode()) % 50) / 5000.0
             Pair(baseLat + offsetLat, baseLng + offsetLng)
         }
     }
 
-    fun cambiarEstadoCaso(idCaso: String, nuevoEstado: Estado){
-        casoRepository.actualizarEstado(idCaso, nuevoEstado)
-        actualizarListaCasos()
+    fun cambiarEstadoCaso(idCaso: String, nuevoEstado: Estado) {
+        viewModelScope.launch {
+            casoRepository.actualizarEstado(idCaso, nuevoEstado)
+            actualizarListaCasos()
+        }
     }
 
-    fun registrarObservacion(idCaso: String, notaTexto: String, autorRol: UsuarioRol){
-        val nuevaObservacion = Observacion(
-            id = "Obs-${contadorObservaciones++}", nota = notaTexto, fechaHora = System.currentTimeMillis(), autor = autorRol
-        )
-        casoRepository.agregarObservacion(idCaso, nuevaObservacion)
-        actualizarListaCasos()
+    fun registrarObservacion(idCaso: String, notaTexto: String, autorRol: UsuarioRol) {
+        viewModelScope.launch {
+            val nuevaObservacion = Observacion(
+                id = "Obs-${System.currentTimeMillis()}",
+                nota = notaTexto,
+                fechaHora = System.currentTimeMillis(),
+                autor = autorRol
+            )
+            casoRepository.agregarObservacion(idCaso, nuevaObservacion)
+            actualizarListaCasos()
+        }
     }
 
-    fun obtenerDetalleCaso(id: String): CasoSeguridad?{
-        return casoRepository.obtenerCasoPorId(id)
+    fun obtenerDetalleCaso(id: String): CasoSeguridad? {
+        return _listaCasos.value.find { it.id == id }
     }
 }

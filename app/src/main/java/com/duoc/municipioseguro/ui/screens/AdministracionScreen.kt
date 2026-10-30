@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.duoc.municipioseguro.Model.CasoSeguridad
 import com.duoc.municipioseguro.Model.Estado
+import com.duoc.municipioseguro.Model.Prioridad
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,7 +40,40 @@ fun AdministracionScreen(
     onGestionarCasoClick: (CasoSeguridad) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableIntStateOf(0) }
+    var estadoFilter by remember { mutableStateOf("Todos") } // "Todos", "Recibido", "En gestión", "Resuelto"
+    var prioridadFilter by remember { mutableStateOf("Todas") } // "Todas", "Alta", "Media", "Baja"
+
+    var estadoMenuExpanded by remember { mutableStateOf(false) }
+    var filtrosMenuExpanded by remember { mutableStateOf(false) }
+
+    // Contadores dinámicos para la tarjeta de resumen
+    val recibidoCount = casos.count { it.estado is Estado.Registrado }
+    val enGestionCount = casos.count { it.estado is Estado.EnRevision || it.estado is Estado.EnSeguimiento }
+    val resueltoCount = casos.count { it.estado is Estado.Derivado }
+
+    // Filtrado de casos
+    val casosFiltrados = casos.filter { caso ->
+        val matchSearch = searchQuery.isBlank() ||
+            caso.id.contains(searchQuery, ignoreCase = true) ||
+            caso.ubicacion.contains(searchQuery, ignoreCase = true) ||
+            caso.descripcion.contains(searchQuery, ignoreCase = true)
+
+        val matchEstado = when (estadoFilter) {
+            "Recibido" -> caso.estado is Estado.Registrado
+            "En gestión" -> caso.estado is Estado.EnRevision || caso.estado is Estado.EnSeguimiento
+            "Resuelto" -> caso.estado is Estado.Derivado
+            else -> true
+        }
+
+        val matchPrioridad = when (prioridadFilter) {
+            "Alta" -> caso.prioridad is Prioridad.Alta
+            "Media" -> caso.prioridad is Prioridad.Media
+            "Baja" -> caso.prioridad is Prioridad.Baja
+            else -> true
+        }
+
+        matchSearch && matchEstado && matchPrioridad
+    }
 
     Scaffold(
         containerColor = Color(0xFFF8FAFC)
@@ -125,7 +159,7 @@ fun AdministracionScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Summary Card (3 Stats)
+            // Summary Card (3 Stats) - Dinámico
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -141,7 +175,7 @@ fun AdministracionScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "1",
+                            text = recibidoCount.toString(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 28.sp,
                             color = Color(0xFF0F172A)
@@ -156,7 +190,7 @@ fun AdministracionScreen(
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "1",
+                            text = enGestionCount.toString(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 28.sp,
                             color = Color(0xFF0F172A)
@@ -171,7 +205,7 @@ fun AdministracionScreen(
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "1",
+                            text = resueltoCount.toString(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 28.sp,
                             color = Color(0xFF0F172A)
@@ -226,8 +260,12 @@ fun AdministracionScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
-                    selected = selectedFilter == 0,
-                    onClick = { selectedFilter = 0 },
+                    selected = (estadoFilter == "Todos" && prioridadFilter == "Todas" && searchQuery.isBlank()),
+                    onClick = {
+                        estadoFilter = "Todos"
+                        prioridadFilter = "Todas"
+                        searchQuery = ""
+                    },
                     label = { Text("Todos · ${casos.size}") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = Color(0xFFE0E7FF),
@@ -236,47 +274,123 @@ fun AdministracionScreen(
                     shape = RoundedCornerShape(20.dp)
                 )
 
-                FilterChip(
-                    selected = false,
-                    onClick = { /* TODO */ },
-                    label = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Estado")
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color.White,
-                        labelColor = Color(0xFF334155)
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                )
+                Box {
+                    FilterChip(
+                        selected = estadoFilter != "Todos",
+                        onClick = { estadoMenuExpanded = true },
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(if (estadoFilter == "Todos") "Estado" else estadoFilter)
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = Color.White,
+                            labelColor = Color(0xFF334155),
+                            selectedContainerColor = Color(0xFFE0E7FF),
+                            selectedLabelColor = Color(0xFF1D4ED8)
+                        ),
+                        shape = RoundedCornerShape(20.dp)
+                    )
 
-                FilterChip(
-                    selected = false,
-                    onClick = { /* TODO */ },
-                    label = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Outlined.Tune,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Filtros")
-                        }
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color.White,
-                        labelColor = Color(0xFF334155)
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                )
+                    DropdownMenu(
+                        expanded = estadoMenuExpanded,
+                        onDismissRequest = { estadoMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Todos los estados") },
+                            onClick = {
+                                estadoFilter = "Todos"
+                                estadoMenuExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Recibido") },
+                            onClick = {
+                                estadoFilter = "Recibido"
+                                estadoMenuExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("En gestión") },
+                            onClick = {
+                                estadoFilter = "En gestión"
+                                estadoMenuExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Resuelto") },
+                            onClick = {
+                                estadoFilter = "Resuelto"
+                                estadoMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+
+                Box {
+                    FilterChip(
+                        selected = prioridadFilter != "Todas",
+                        onClick = { filtrosMenuExpanded = true },
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Tune,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(if (prioridadFilter == "Todas") "Filtros" else "Prioridad: $prioridadFilter")
+                            }
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = Color.White,
+                            labelColor = Color(0xFF334155),
+                            selectedContainerColor = Color(0xFFE0E7FF),
+                            selectedLabelColor = Color(0xFF1D4ED8)
+                        ),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+
+                    DropdownMenu(
+                        expanded = filtrosMenuExpanded,
+                        onDismissRequest = { filtrosMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Todas las prioridades") },
+                            onClick = {
+                                prioridadFilter = "Todas"
+                                filtrosMenuExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Alta") },
+                            onClick = {
+                                prioridadFilter = "Alta"
+                                filtrosMenuExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Media") },
+                            onClick = {
+                                prioridadFilter = "Media"
+                                filtrosMenuExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Baja") },
+                            onClick = {
+                                prioridadFilter = "Baja"
+                                filtrosMenuExpanded = false
+                            }
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -287,7 +401,7 @@ fun AdministracionScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${casos.size} casos de demostración",
+                    text = "${casosFiltrados.size} casos encontrados",
                     color = Color(0xFF64748B),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
@@ -303,28 +417,43 @@ fun AdministracionScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Cases LazyColumn
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(casos) { caso ->
-                    CasoAdminCard(
-                        caso = caso,
-                        onGestionarClick = { onGestionarCasoClick(caso) }
+            if (casosFiltrados.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No se encontraron casos con los filtros seleccionados.",
+                        color = Color.Gray,
+                        fontSize = 14.sp
                     )
                 }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(casosFiltrados) { caso ->
+                        CasoAdminCard(
+                            caso = caso,
+                            onGestionarClick = { onGestionarCasoClick(caso) }
+                        )
+                    }
 
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Prototipo de demostración · Datos ficticios",
-                        color = Color(0xFF94A3B8),
-                        fontSize = 12.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Prototipo de demostración · Datos ficticios",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 12.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -336,44 +465,20 @@ fun CasoAdminCard(
     caso: CasoSeguridad,
     onGestionarClick: () -> Unit
 ) {
-    // Estado y subtexto condicional según ID / Estado
-    val (badgeText, badgeIcon, badgeBgColor, badgeTextColor, subEstadoText) = when (caso.id) {
-        "SJ-2026-0148" -> Tuple5(
-            "Recibido",
-            Icons.Outlined.CheckCircle,
-            Color(0xFFE0E7FF),
-            Color(0xFF1D4ED8),
-            "Pendiente de asignación"
-        )
-        "SJ-2026-0142" -> Tuple5(
-            "En gestión",
-            Icons.Outlined.Schedule,
-            Color(0xFFFEF3C7),
-            Color(0xFFD97706),
-            "Área de espacio público"
-        )
-        "SJ-2026-0126" -> Tuple5(
-            "Resuelto",
-            Icons.Outlined.CheckCircle,
-            Color(0xFFDCFCE7),
-            Color(0xFF15803D),
-            "Reparación informada"
-        )
-        else -> when (caso.estado) {
-            is Estado.Registrado -> Tuple5("Recibido", Icons.Outlined.CheckCircle, Color(0xFFE0E7FF), Color(0xFF1D4ED8), "Pendiente de asignación")
-            is Estado.EnRevision -> Tuple5("En gestión", Icons.Outlined.Schedule, Color(0xFFFEF3C7), Color(0xFFD97706), "En revisión por equipo")
-            is Estado.EnSeguimiento -> Tuple5("Resuelto", Icons.Outlined.CheckCircle, Color(0xFFDCFCE7), Color(0xFF15803D), "Caso finalizado")
-            else -> Tuple5("Recibido", Icons.Outlined.CheckCircle, Color(0xFFE0E7FF), Color(0xFF1D4ED8), "Registrado")
-        }
+    val (badgeText, badgeIcon, badgeBgColor, badgeTextColor, subEstadoText) = when (caso.estado) {
+        is Estado.Registrado -> Tuple5("Recibido", Icons.Outlined.CheckCircle, Color(0xFFE0E7FF), Color(0xFF1D4ED8), "Pendiente de asignación")
+        is Estado.EnRevision, is Estado.EnSeguimiento -> Tuple5("En gestión", Icons.Outlined.Schedule, Color(0xFFFEF3C7), Color(0xFFD97706), "En revisión por equipo")
+        is Estado.Derivado -> Tuple5("Resuelto", Icons.Outlined.CheckCircle, Color(0xFFDCFCE7), Color(0xFF15803D), "Caso finalizado")
     }
 
     val dateFormat = SimpleDateFormat("d 'oct.' yyyy", Locale.getDefault())
     val fechaStr = dateFormat.format(Date(caso.fechaHora))
 
     val tituloCaso = when (caso.categoria.javaClass.simpleName) {
-        "AlumbradoPublico" -> if (caso.id == "SJ-2026-0126") "Luminaria intermitente" else "Luminaria apagada"
+        "AlumbradoPublico" -> "Luminaria apagada"
         "EspacioPublico" -> "Vereda obstruida"
-        else -> caso.categoria.toString()
+        "ConvivenciaVecinal" -> "Problema de convivencia"
+        else -> "Situación reportada"
     }
 
     Card(
