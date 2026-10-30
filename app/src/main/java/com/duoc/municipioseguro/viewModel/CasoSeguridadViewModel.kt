@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.location.Geocoder
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.duoc.municipioseguro.Model.CasoSeguridad
 import com.duoc.municipioseguro.Model.CategoriaCaso
 import com.duoc.municipioseguro.Model.Estado
@@ -16,6 +17,7 @@ import com.duoc.municipioseguro.repository.CasoSeguridadRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class CasoSeguridadViewModel(application: Application) : AndroidViewModel(application) {
@@ -37,8 +39,48 @@ class CasoSeguridadViewModel(application: Application) : AndroidViewModel(applic
         _listaCasos.value = casoRepository.obtenerTodosLosCasos()
     }
 
+    fun iniciarSesionConRoom(
+        correo: String,
+        contrasena: String,
+        onResultado: (exito: Boolean, mensaje: String) -> Unit
+    ) {
+        viewModelScope.launch {
+            if (correo.isBlank() || contrasena.isBlank()) {
+                onResultado(false, "Por favor completa el correo y la contraseña")
+                return@launch
+            }
+            val sesion = authRepository.validarCredencialesRoom(correo, contrasena)
+            if (sesion != null) {
+                _sesionActual.value = sesion
+                onResultado(true, "Bienvenido/a, ${sesion.nombreGenerico}")
+            } else {
+                onResultado(false, "Credenciales incorrectas o usuario no registrado")
+            }
+        }
+    }
+
+    fun registrarUsuarioConRoom(
+        correo: String,
+        contrasena: String,
+        rol: UsuarioRol,
+        onResultado: (exito: Boolean, mensaje: String) -> Unit
+    ) {
+        viewModelScope.launch {
+            if (correo.isBlank() || contrasena.isBlank()) {
+                onResultado(false, "Ingresa un correo y contraseña válidos")
+                return@launch
+            }
+            val exito = authRepository.registrarUsuarioRoom(correo, contrasena, rol)
+            if (exito) {
+                onResultado(true, "Usuario registrado exitosamente en Room")
+            } else {
+                onResultado(false, "El correo $correo ya se encuentra registrado")
+            }
+        }
+    }
+
     fun iniciarSesionSimulada(rol: UsuarioRol){
-        val sesion = authRepository.iniciarSesion(rol)
+        val sesion = authRepository.iniciarSesionSimulada(rol)
         _sesionActual.value = sesion
     }
 

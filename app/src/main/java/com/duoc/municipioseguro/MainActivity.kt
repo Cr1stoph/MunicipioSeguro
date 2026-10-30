@@ -58,6 +58,21 @@ fun AppNavegacion(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
+                    onLoginSubmit = { correo, contrasena, rolSimulado ->
+                        viewModel.iniciarSesionConRoom(correo, contrasena) { exito, mensaje ->
+                            if (exito) {
+                                Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
+                            } else {
+                                // Fallback para prototipo si se usa el selector de simulación
+                                viewModel.iniciarSesionSimulada(rolSimulado)
+                                Toast.makeText(
+                                    context,
+                                    "$mensaje. Ingresando en modo prototipo ($correo)",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    },
                     onCreateAccountClick = {
                         authScreen = "create_account"
                     },
@@ -85,12 +100,14 @@ fun AppNavegacion(
                     onBackToLogin = {
                         authScreen = "login"
                     },
-                    onAccountCreated = { email ->
-                        Toast.makeText(
-                            context,
-                            "Cuenta creada para $email. Inicia sesión.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                    onAccountCreated = { correo, contrasena, rol ->
+                        viewModel.registrarUsuarioConRoom(correo, contrasena, rol) { _, mensaje ->
+                            Toast.makeText(
+                                context,
+                                mensaje,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                         authScreen = "login"
                     }
                 )
