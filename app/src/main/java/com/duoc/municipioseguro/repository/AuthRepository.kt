@@ -6,8 +6,9 @@ import com.duoc.municipioseguro.Model.*
 import com.duoc.municipioseguro.data.local.MunicipioDatabase
 import com.duoc.municipioseguro.data.local.UsuarioDao
 import com.duoc.municipioseguro.data.local.UsuarioEntity
+import com.duoc.municipioseguro.remote.RetrofitInstance
 
-class AuthRepository(context: Context) {
+open class AuthRepository(context: Context) {
 
     private val usuarioDao: UsuarioDao = MunicipioDatabase.getDatabase(context).usuarioDao()
     private val prefs: SharedPreferences = context.getSharedPreferences("AuthPrefs", Context.MODE_PRIVATE)
@@ -29,8 +30,17 @@ class AuthRepository(context: Context) {
         }
     }
 
-    // Validación de inicio de sesión consultando Room Database
+    // Validación de inicio de sesión consultando Room Database y sincronizando con Xano
     suspend fun validarCredencialesRoom(correo: String, contrasena: String): SesionUsuario? {
+        try {
+            val usuariosRemotos = RetrofitInstance.api.obtenerUsuarios()
+            for (u in usuariosRemotos) {
+                usuarioDao.insertarUsuario(u)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         val usuarioEncontrado = usuarioDao.validarLogin(correo.trim(), contrasena.trim())
         return if (usuarioEncontrado != null) {
             val rolEnum = obtenerRolDesdeString(usuarioEncontrado.rol) ?: UsuarioRol.Residente
@@ -49,7 +59,7 @@ class AuthRepository(context: Context) {
         }
     }
 
-    // Registro de nuevo usuario en Room Database
+    // Registro de nuevo usuario en Room Database y Xano
     suspend fun registrarUsuarioRoom(correo: String, contrasena: String, rol: UsuarioRol): Boolean {
         val existente = usuarioDao.obtenerPorCorreo(correo.trim())
         if (existente != null) {
@@ -60,7 +70,20 @@ class AuthRepository(context: Context) {
             contrasena = contrasena.trim(),
             rol = rol.javaClass.simpleName
         )
+        // Guardar localmente
         usuarioDao.insertarUsuario(nuevoEntity)
+        // Enviar a Xano en segundo plano usando Map para evitar enviar id=0
+        try {
+            val body = mapOf(
+                "correo" to correo.trim(),
+                "contrasena" to contrasena.trim(),
+                "rol" to rol.javaClass.simpleName
+            )
+            RetrofitInstance.api.crearUsuario(body)
+            android.util.Log.d("XanoSuccess", "Usuario creado en Xano exitosamente")
+        } catch (e: Exception) {
+            android.util.Log.e("XanoError", "Error al crear usuario en Xano: ${e.localizedMessage}", e)
+        }
         return true
     }
 
@@ -75,7 +98,7 @@ class AuthRepository(context: Context) {
         return nuevaSesion
     }
 
-    fun obtenerSesionActual(): SesionUsuario? {
+    open fun obtenerSesionActual(): SesionUsuario? {
         return sesionActual
     }
 

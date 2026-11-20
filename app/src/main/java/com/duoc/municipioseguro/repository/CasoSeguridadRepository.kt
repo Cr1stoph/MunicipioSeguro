@@ -5,16 +5,27 @@ import com.duoc.municipioseguro.Model.*
 import com.duoc.municipioseguro.data.local.CasoDao
 import com.duoc.municipioseguro.data.local.CasoEntity
 import com.duoc.municipioseguro.data.local.MunicipioDatabase
+import com.duoc.municipioseguro.remote.RetrofitInstance
 import org.json.JSONArray
 import org.json.JSONObject
 
-class CasoSeguridadRepository(context: Context) {
+open class CasoSeguridadRepository(context: Context) {
 
     private val casoDao: CasoDao = MunicipioDatabase.getDatabase(context).casoDao()
 
-    suspend fun obtenerTodosLosCasos(): List<CasoSeguridad> {
-        val entities = casoDao.obtenerTodosLosCasos()
-        return entities.map { entityToDomain(it) }
+    open suspend fun obtenerTodosLosCasos(): List<CasoSeguridad> {
+        return try {
+            // Intentar obtener de Xano (Nube) y actualizar caché local (Room)
+            val casosRemotos = RetrofitInstance.api.obtenerCasos()
+            for (casoEntity in casosRemotos) {
+                casoDao.insertarCaso(casoEntity)
+            }
+            casosRemotos.map { entityToDomain(it) }
+        } catch (e: Exception) {
+            // Fallback: Si no hay red, leer de Room local
+            val entities = casoDao.obtenerTodosLosCasos()
+            entities.map { entityToDomain(it) }
+        }
     }
 
     suspend fun obtenerCasoPorId(id: String): CasoSeguridad? {
@@ -24,7 +35,15 @@ class CasoSeguridadRepository(context: Context) {
 
     suspend fun guardarNuevoCaso(nuevoCaso: CasoSeguridad) {
         val entity = domainToEntity(nuevoCaso)
+        // Guardar localmente en Room
         casoDao.insertarCaso(entity)
+        // Intentar enviar a Xano (Nube) en segundo plano
+        try {
+            RetrofitInstance.api.crearCaso(entity)
+            android.util.Log.d("XanoSuccess", "Caso creado en Xano exitosamente")
+        } catch (e: Exception) {
+            android.util.Log.e("XanoError", "Error al crear caso en Xano: ${e.localizedMessage}", e)
+        }
     }
 
     suspend fun actualizarEstado(id: String, nuevoEstado: Estado) {
@@ -32,6 +51,15 @@ class CasoSeguridadRepository(context: Context) {
         if (casoActual != null) {
             val estadoStr = estadoToString(nuevoEstado)
             casoDao.actualizarEstado(id, estadoStr)
+
+            // Sincronizar actualización con Xano
+            try {
+                val casoActualizado = casoDao.obtenerCasoPorId(id)!!
+                RetrofitInstance.api.actualizarCaso(id, casoActualizado)
+                android.util.Log.d("XanoSuccess", "Estado de caso actualizado en Xano exitosamente")
+            } catch (e: Exception) {
+                android.util.Log.e("XanoError", "Error al actualizar estado en Xano: ${e.localizedMessage}", e)
+            }
         }
     }
 
@@ -42,6 +70,15 @@ class CasoSeguridadRepository(context: Context) {
             listaObs.add(observacion)
             val nuevoJson = observacionesToJson(listaObs)
             casoDao.actualizarObservaciones(idCaso, nuevoJson)
+
+            // Sincronizar observaciones con Xano
+            try {
+                val casoActualizado = casoDao.obtenerCasoPorId(idCaso)!!
+                RetrofitInstance.api.actualizarCaso(idCaso, casoActualizado)
+                android.util.Log.d("XanoSuccess", "Observación agregada y sincronizada en Xano")
+            } catch (e: Exception) {
+                android.util.Log.e("XanoError", "Error al sincronizar observación en Xano: ${e.localizedMessage}", e)
+            }
         }
     }
 

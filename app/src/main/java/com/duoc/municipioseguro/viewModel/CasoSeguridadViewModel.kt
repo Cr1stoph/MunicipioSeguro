@@ -19,10 +19,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-class CasoSeguridadViewModel(application: Application) : AndroidViewModel(application) {
-    private val authRepository = AuthRepository(application)
-    private val casoRepository = CasoSeguridadRepository(application)
-
+class CasoSeguridadViewModel(
+    application: Application,
+    private val casoRepository: CasoSeguridadRepository = CasoSeguridadRepository(application),
+    private val authRepository: AuthRepository = AuthRepository(application)
+) : AndroidViewModel(application) {
     private val _listaCasos = MutableStateFlow<List<CasoSeguridad>>(emptyList())
     val listaCasos: StateFlow<List<CasoSeguridad>> = _listaCasos.asStateFlow()
 
