@@ -21,9 +21,16 @@ import java.util.Locale
 
 class CasoSeguridadViewModel(
     application: Application,
-    private val casoRepository: CasoSeguridadRepository = CasoSeguridadRepository(application),
-    private val authRepository: AuthRepository = AuthRepository(application)
+    private val casoRepository: CasoSeguridadRepository,
+    private val authRepository: AuthRepository
 ) : AndroidViewModel(application) {
+
+    constructor(application: Application) : this(
+        application,
+        CasoSeguridadRepository(application),
+        AuthRepository(application)
+    )
+
     private val _listaCasos = MutableStateFlow<List<CasoSeguridad>>(emptyList())
     val listaCasos: StateFlow<List<CasoSeguridad>> = _listaCasos.asStateFlow()
 
