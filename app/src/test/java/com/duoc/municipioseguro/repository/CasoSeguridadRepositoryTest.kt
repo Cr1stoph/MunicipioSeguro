@@ -10,7 +10,7 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+//Test de repo
 class CasoSeguridadRepositoryTest {
     private lateinit var servidor: MockWebServer
     private lateinit var api: ApiService
